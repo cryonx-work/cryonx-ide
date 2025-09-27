@@ -5,6 +5,7 @@ import { RunDebugPanel } from './RunDebugPanel';
 import { ExtensionsPanel } from './ExtensionsPanel';
 import { DeployPanel } from './DeployPanel';
 import { ConnectWalletPanel } from './ConnectWalletPanel';
+import { FileNode } from '@/types/File'
 
 interface SidePanelProps {
   activeTab: string;
