@@ -2,20 +2,22 @@ import { useState, useEffect, useRef } from 'react';
 import { EditorHeader } from './editor/EditorHeader';
 import Editor from '@monaco-editor/react'
 import { EditorConfig } from './editor/EditorConfig';
+import * as monaco from "monaco-editor";
 
 interface CodeEditorProps {
   fileName: string;
   content: string;
   onChange: (content: string) => void;
   searchTerm?: string;
-  
+
 }
+
 
 export function CodeEditor({ fileName, content, onChange, searchTerm }: CodeEditorProps) {
   const [code, setCode] = useState(content);
   const [lineNumbers, setLineNumbers] = useState<number[]>([]);
   const [currentLine, setCurrentLine] = useState(1);
-  
+
   useEffect(() => {
     setCode(content);
   }, [content]);
@@ -25,12 +27,15 @@ export function CodeEditor({ fileName, content, onChange, searchTerm }: CodeEdit
     setLineNumbers(Array.from({ length: lines }, (_, i) => i + 1));
   }, [code]);
 
-  const handleCodeChange = (value: string , ev) =>{
-    setCode(value);
-    onChange(value);
+  const handleCodeChange = (
+    value: string | undefined,
+    ev: monaco.editor.IModelContentChangedEvent
+  ) => {
+    if (value !== undefined) {
+      setCode(value);
+      onChange(value);
+    }
   };
-
-
 
   return (
     <div className="flex-1 bg-gray-900 relative overflow-hidden">
@@ -39,9 +44,9 @@ export function CodeEditor({ fileName, content, onChange, searchTerm }: CodeEdit
         fileName={fileName}
         lineCount={code.split("\n").length}
       />
-      
+
       {/* Editor Body */}
-      <EditorConfig/>
+      <EditorConfig />
       <Editor
         value={code}
         onChange={handleCodeChange}
@@ -53,14 +58,14 @@ export function CodeEditor({ fileName, content, onChange, searchTerm }: CodeEdit
           {
             acceptSuggestionOnCommitCharacter: true,
             acceptSuggestionOnEnter: "on",
-            minimap:{
+            minimap: {
               enabled: true,
             },
             glyphMargin: false,
             lineDecorationsWidth: 10,
           }
         }
-    />
+      />
 
     </div>
   );

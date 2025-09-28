@@ -29,7 +29,7 @@ const initialFiles: Record<string, string> = {
 
 
 export default function Home() {
-    const [tabs, setTabs] = useState<Tab[]>([
+  const [tabs, setTabs] = useState<Tab[]>([
     {
       id: "welcome",
       name: "welcome",
@@ -45,36 +45,36 @@ export default function Home() {
   });
   const [globalSearchTerm, setGlobalSearchTerm] = useState("");
   const [activeActivityTab, setActiveActivityTab] = useState("explorer");
-   const [panelSize, setPanelSize] = useState(20);
+  const [panelSize, setPanelSize] = useState(20);
 
   const handleFileSelect = async (node: FileNode) => {
-  if (node.type !== "file") return;
+    if (node.type !== "file") return;
 
-  // Check if tab already exists
-  const existingTab = tabs.find((tab) => tab.id === node.name);
+    // Check if tab already exists
+    const existingTab = tabs.find((tab) => tab.id === node.name);
 
-  if (existingTab) {
-    setActiveTab(node.name);
-  } else {
-    // Lấy content từ File object nếu có
-    let content: string;
-    if (node.file) {
-      content = await node.file.text();
+    if (existingTab) {
+      setActiveTab(node.name);
     } else {
-      content = `// ${node.name}\n\n// Start coding here...`;
+      // Lấy content từ File object nếu có
+      let content: string;
+      if (node.file) {
+        content = await node.file.text();
+      } else {
+        content = `// ${node.name}\n\n// Start coding here...`;
+      }
+
+      const newTab: Tab = {
+        id: node.name,
+        name: node.name,
+        content,
+        isDirty: false,
+      };
+
+      setTabs((prev) => [...prev, newTab]);
+      setActiveTab(node.name);
     }
-
-    const newTab: Tab = {
-      id: node.name,
-      name: node.name,
-      content,
-      isDirty: false,
-    };
-
-    setTabs((prev) => [...prev, newTab]);
-    setActiveTab(node.name);
-  }
-};
+  };
 
 
   const handleTabClose = (tabId: string) => {
@@ -107,9 +107,9 @@ export default function Home() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Activity Bar */}
-        <ActivityBar 
-          activeTab={activeActivityTab} 
-          onTabChange={setActiveActivityTab} 
+        <ActivityBar
+          activeTab={activeActivityTab}
+          onTabChange={setActiveActivityTab}
         />
 
         <ResizablePanelGroup
@@ -122,16 +122,16 @@ export default function Home() {
             maxSize={40}
             onResize={(size) => {
               if (size < 10) {
-                
+
                 setPanelSize(-1);
               } else {
                 setPanelSize(size);
               }
             }}
           >
-            <SidePanel 
-              activeTab={activeActivityTab} 
-              onFileSelect={handleFileSelect} 
+            <SidePanel
+              activeTab={activeActivityTab}
+              onFileSelect={handleFileSelect}
             />
           </ResizablePanel>
 
@@ -149,34 +149,41 @@ export default function Home() {
               )}
 
               <div className="flex-1 flex flex-col">
-                {activeTabData ? (
-                  <CodeEditor
-                    fileName={activeTabData.name}
-                    content={activeTabData.content}
-                    onChange={handleCodeChange}
-                    searchTerm={globalSearchTerm}
-                  />
-                ) : (
-                  <div className="flex-1 bg-gray-900 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <h2 className="text-xl mb-2">
-                        Welcome to CryonX IDE
-                      </h2>
-                      <p>
-                        Select a file from the explorer to start
-                        coding
-                      </p>
-                    </div>
-                  </div>
-                )}
+                <ResizablePanelGroup direction="vertical">
+                  <ResizablePanel defaultSize={75}>
+                    {activeTabData ? (
+                      <CodeEditor
+                        fileName={activeTabData.name}
+                        content={activeTabData.content}
+                        onChange={handleCodeChange}
+                        searchTerm={globalSearchTerm}
+                      />
+                    ) : (
+                      <div className="flex-1 bg-gray-900 flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                          <h2 className="text-xl mb-2">
+                            Welcome to CryonX IDE
+                          </h2>
+                          <p>Select a file from the explorer to start coding</p>
+                        </div>
+                      </div>
+                    )}
+                  </ResizablePanel>
 
-                <Terminal
-                  isOpen={isTerminalOpen}
-                  onToggle={() =>
-                    setIsTerminalOpen(!isTerminalOpen)
-                  }
-                />
+                  {isTerminalOpen && (
+                    <>
+                      <ResizableHandle className="h-1 bg-gray-700 hover:bg-purple-500 transition-colors" />
+                      <ResizablePanel defaultSize={25} minSize={10} maxSize={50}>
+                        <Terminal
+                          isOpen={isTerminalOpen}
+                          onToggle={() => setIsTerminalOpen(!isTerminalOpen)}
+                        />
+                      </ResizablePanel>
+                    </>
+                  )}
+                </ResizablePanelGroup>
               </div>
+
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
