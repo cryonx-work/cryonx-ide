@@ -23,63 +23,7 @@ interface Tab {
 }
 
 const initialFiles: Record<string, string> = {
-  "page.tsx": `import React from 'react';
-
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Welcome to React</h1>
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-      </header>
-    </div>
-  );
-}
-
-export default App;`,
-  "index.ts": `import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-
-root.render(<App />);`,
-  "Button.tsx": `import React from 'react';
-
-interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: 'primary' | 'secondary';
-}
-
-export function Button({ children, onClick, variant = 'primary' }: ButtonProps) {
-  return (
-    <button 
-      className={\`btn btn-\${variant}\`}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}`,
-  "package.json": `{
-  "name": "my-react-app",
-  "version": "1.0.0",
-  "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "typescript": "^4.9.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test"
-  }
-}`,
+  "welcome": `Welcome to CryonX IDE`,
 };
 
 
@@ -87,13 +31,13 @@ export function Button({ children, onClick, variant = 'primary' }: ButtonProps) 
 export default function Home() {
     const [tabs, setTabs] = useState<Tab[]>([
     {
-      id: "page.tsx",
-      name: "page.tsx",
-      content: initialFiles["page.tsx"],
+      id: "welcome",
+      name: "welcome",
+      content: initialFiles["welcome"],
       isDirty: false,
     },
   ]);
-  const [activeTab, setActiveTab] = useState("page.tsx");
+  const [activeTab, setActiveTab] = useState("welcome");
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({
     line: 1,
