@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 // src/lib/db.ts
 
 const MONGODB_URI = process.env.MONGODB_URI;
+const options: mongoose.ConnectOptions = {
+  appName: process.env.APP_NAME,
+};
 
 if (!MONGODB_URI) {
     throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
@@ -24,12 +27,13 @@ const cache = global._mongooseCache ?? (global._mongooseCache = { conn: null, pr
  * during hot-reloads (Next.js dev) we don't create multiple connections.
  */
 export default async function connectDB(): Promise<typeof mongoose> {
+    
     if (cache.conn) {
         return cache.conn;
     }
 
     if (!cache.promise) {
-        cache.promise = mongoose.connect(MONGODB_URI!).then((m) => m);
+        cache.promise = mongoose.connect(MONGODB_URI!, options).then((m) => m);
     }
 
     cache.conn = await cache.promise;
