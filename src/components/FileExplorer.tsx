@@ -12,7 +12,7 @@ interface FileExplorerProps {
 
 // convert FileList -> FileNode tree
 function buildFileTree(files: FileList): FileNode[] {
-  const root: FileNode = { name: "root", type: "folder", children: [], isOpen: true, file: [] };
+  const root: FileNode = { name: "root", type: "folder", children: [], isOpen: true};
 
   Array.from(files).forEach((file) => {
     const f = file as File & { webkitRelativePath: string };
