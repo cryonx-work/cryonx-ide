@@ -17,6 +17,7 @@
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.487.0",
     "monaco-editor": "^0.53.0",
+    "mongodb": "^6.20.0",
     "next": "15.5.3",
     "next-connect": "^1.0.0",
     "postcss": "^8.5.6",
