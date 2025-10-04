@@ -1,16 +1,17 @@
-import { 
-  Files, 
-  Search, 
-  GitBranch, 
-  Play, 
-  Puzzle, 
-  Settings, 
-  User, 
+import {
+  Files,
+  Search,
+  GitBranch,
+  Play,
+  Puzzle,
+  Settings,
+  User,
   Globe,
   Wallet,
   Rocket,
-  Code
-} from 'lucide-react';
+  Code,
+  
+} from "lucide-react";
 import { useState } from 'react';
 
 interface ActivityBarProps {
@@ -20,18 +21,18 @@ interface ActivityBarProps {
 
 export function ActivityBar({ activeTab, onTabChange }: ActivityBarProps) {
   const tabs = [
-    { id: 'explorer', icon: Files, label: 'Explorer' },
-    { id: 'search', icon: Search, label: 'Search' },
-    { id: 'source-control', icon: GitBranch, label: 'Source Control' },
-    { id: 'run-debug', icon: Play, label: 'Run and Debug' },
-    { id: 'extensions', icon: Puzzle, label: 'Extensions' },
-    { id: 'deploy', icon: Rocket, label: 'Deploy' },
-    { id: 'connect-wallet', icon: Wallet, label: 'Connect Wallet' },
+    { id: "explorer", icon: Files, label: "Explorer" },
+    { id: "search", icon: Search, label: "Search" },
+    { id: "source-control", icon: GitBranch, label: "Source Control" },
+    { id: "run-debug", icon: Play, label: "Run and Debug" },
+    { id: "extensions", icon: Puzzle, label: "Extensions" },
+    { id: "deploy", icon: Rocket, label: "Deploy" },
+    { id: "connect-wallet", icon: Wallet, label: "Connect Wallet" },
   ];
 
   const bottomTabs = [
-    { id: 'accounts', icon: User, label: 'Accounts' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
+    { id: "accounts", icon: User, label: "Accounts" },
+    { id: "settings", icon: Settings, label: "Settings" },
   ];
 
   const TabButton = ({ tab, isActive }: { tab: typeof tabs[0], isActive: boolean }) => (

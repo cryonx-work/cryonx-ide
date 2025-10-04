@@ -1,43 +1,20 @@
-// Chuyển mảng file phẳng từ DB thành FileNode tree
-function buildFileTreeFromDB(files: any[]): FileNode[] {
-  const root: FileNode = {
-    name: "root",
-    type: "folder",
-    children: [],
-    isOpen: true,
-  };
-
-  files.forEach((file) => {
-    const parts = file.path ? file.path.split("/") : [file.name];
-    let current = root;
-    parts.forEach((part: string, idx: number) => {
-      const isFile = idx === parts.length - 1;
-      let child = current.children?.find((c) => c.name === part);
-      if (!child) {
-        child = {
-          name: part,
-          type: isFile ? "file" : "folder",
-          children: isFile ? undefined : [],
-          isOpen: !isFile,
-          file: isFile ? file : undefined,
-          path: current.path ? `${current.path}/${part}` : part,
-        };
-        current.children?.push(child);
-      }
-      if (!isFile && child.children) current = child;
-    });
-  });
-  return root.children || [];
-}
-
 import { Search, X, Upload, File, Folder } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { FileItem } from "./FileItem";
-import { FileNode } from "@/types/File";
+
+export interface FileNode {
+  name: string;
+  type: "file" | "folder";
+  children?: FileNode[];
+  isOpen?: boolean;
+  file?: File;
+  path?: string;
+  projectId?: string;
+}
 
 interface FileExplorerProps {
   onFileSelect: (node: FileNode) => void;
-  projectId: string;
+  projectId?: string;
 }
 
 // convert FileList -> FileNode tree
@@ -50,7 +27,7 @@ function buildFileTree(files: FileList, projectId: string): FileNode[] {
   };
 
   Array.from(files).forEach((file) => {
-    const f = file as File & { webkitRelativePath: string };
+    const f = file as File & { webkitRelativePath?: string };
     const parts = f.webkitRelativePath
       ? f.webkitRelativePath.split("/")
       : [f.name];
@@ -93,11 +70,11 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
   // fetch files từ DB
   useEffect(() => {
     async function fetchFiles() {
-      if (!projectId || projectId === "undefined") return;
+      if (!projectId) return;
       const res = await fetch(`/api/files?projectId=${projectId}`);
       if (res.ok) {
         const files = await res.json();
-        setFileTree(buildFileTreeFromDB(files));
+        setFileTree(files);
       }
     }
     fetchFiles();
@@ -141,25 +118,13 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
     ? filterNodes(fileTree, searchTerm)
     : fileTree;
 
-  useEffect(() => {
-    if (folderInputRef.current) {
-      folderInputRef.current.setAttribute("webkitdirectory", "");
-    }
-  }, []);
   // handle upload folder
-
   const handleUploadFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let currentProjectId = projectId;
-    if (!currentProjectId || currentProjectId === "undefined") {
-      try {
-        currentProjectId = "";
-        // Nếu muốn lưu lại projectId này cho lần sau, hãy setProjectId(currentProjectId) nếu có state quản lý projectId
-        alert("Đã tự động tạo project mới!");
-      } catch (err) {
-        alert("Tạo project thất bại!");
-        return;
-      }
+    if (!projectId) {
+      alert("Chưa có projectId!");
+      return;
     }
+
     const files = e.target.files;
     if (!files) return;
 
@@ -171,7 +136,7 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          projectId: currentProjectId,
+          projectId,
           name: file.name,
           path,
           content,
@@ -181,25 +146,20 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
     }
 
     // Reload fileTree after upload
-    const res = await fetch(`/api/files?projectId=${currentProjectId}`);
+    const res = await fetch(`/api/files?projectId=${projectId}`);
     if (res.ok) {
       const files = await res.json();
-      setFileTree(buildFileTreeFromDB(files));
+      setFileTree(files);
     }
   };
 
+  // handle upload files
   const handleUploadFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let currentProjectId = projectId;
-    if (!currentProjectId || currentProjectId === "undefined") {
-      try {
-        currentProjectId = await createProject();
-        // Nếu muốn lưu lại projectId này cho lần sau, hãy setProjectId(currentProjectId) nếu có state quản lý projectId
-        alert("Đã tự động tạo project mới!");
-      } catch (err) {
-        alert("Tạo project thất bại!");
-        return;
-      }
+    if (!projectId) {
+      alert("Chưa có projectId!");
+      return;
     }
+
     const files = e.target.files;
     if (!files) return;
 
@@ -211,7 +171,7 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          projectId: currentProjectId,
+          projectId,
           name: file.name,
           path,
           content,
@@ -221,7 +181,7 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
     }
 
     // Reload fileTree after upload
-    const res = await fetch(`/api/files?projectId=${currentProjectId}`);
+    const res = await fetch(`/api/files?projectId=${projectId}`);
     if (res.ok) {
       const files = await res.json();
       setFileTree(files);
@@ -254,8 +214,11 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
                     multiple
                     ref={folderInputRef}
                     hidden
-                    {...{ webkitdirectory: "", directory: "" }}
                     onChange={handleUploadFolder}
+                    // @ts-ignore: thuộc tính không được định nghĩa trong TS
+                    webkitdirectory=""
+                    // @ts-ignore
+                    directory=""
                   />
                 </label>
 
@@ -268,7 +231,7 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
                     multiple
                     ref={fileInputRef}
                     hidden
-                    onChange={handleUploadFiles} // hoặc handleUploadFile nếu muốn riêng
+                    onChange={handleUploadFiles}
                   />
                 </label>
               </div>
@@ -309,9 +272,9 @@ export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
 
       {/* tree */}
       <div className="flex-1 overflow-y-auto py-2">
-        {displayedTree.map((node, index) => (
+        {displayedTree.map((node) => (
           <FileItem
-            key={index}
+            key={node.path || node.name}
             node={node}
             level={0}
             onFileSelect={onFileSelect}
