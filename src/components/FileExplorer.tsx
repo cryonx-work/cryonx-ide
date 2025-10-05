@@ -1,28 +1,42 @@
-"use client";
-import { Search, X, Upload } from "lucide-react";
+import { Search, X, Upload, File, Folder } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { FileItem } from "./FileItem";
-import { FileNode } from '@/types/File'
 
-
+export interface FileNode {
+  name: string;
+  type: "file" | "folder";
+  children?: FileNode[];
+  isOpen?: boolean;
+  file?: File;
+  path?: string;
+  projectId?: string;
+}
 
 interface FileExplorerProps {
   onFileSelect: (node: FileNode) => void;
+  projectId?: string;
 }
 
 // convert FileList -> FileNode tree
-function buildFileTree(files: FileList): FileNode[] {
-  const root: FileNode = { name: "root", type: "folder", children: [], isOpen: true};
+function buildFileTree(files: FileList, projectId: string): FileNode[] {
+  const root: FileNode = {
+    name: "root",
+    type: "folder",
+    children: [],
+    isOpen: true,
+  };
 
   Array.from(files).forEach((file) => {
-    const f = file as File & { webkitRelativePath: string };
-    const parts = f.webkitRelativePath.split("/");
+    const f = file as File & { webkitRelativePath?: string };
+    const parts = f.webkitRelativePath
+      ? f.webkitRelativePath.split("/")
+      : [f.name];
 
     let current = root;
 
     parts.forEach((part, idx) => {
       const isFile = idx === parts.length - 1;
-      let child = current.children!.find((c) => c.name === part);
+      let child = current.children?.find((c) => c.name === part);
 
       if (!child) {
         child = {
@@ -30,24 +44,41 @@ function buildFileTree(files: FileList): FileNode[] {
           type: isFile ? "file" : "folder",
           children: isFile ? undefined : [],
           isOpen: !isFile,
-          file: isFile ? f : undefined, 
+          file: isFile ? f : undefined,
+          path: current.path ? `${current.path}/${part}` : part,
+          projectId,
         };
-        current.children!.push(child);
+        current.children?.push(child);
       }
 
-      if (!isFile) current = child;
+      if (!isFile && child.children) current = child;
     });
   });
 
-  return root.children!;
+  return root.children || [];
 }
 
-
-
-export function FileExplorer({ onFileSelect }: FileExplorerProps) {
+export function FileExplorer({ onFileSelect, projectId }: FileExplorerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // fetch files từ DB
+  useEffect(() => {
+    async function fetchFiles() {
+      if (!projectId) return;
+      const res = await fetch(`/api/files?projectId=${projectId}`);
+      if (res.ok) {
+        const files = await res.json();
+        setFileTree(files);
+      }
+    }
+    fetchFiles();
+  }, [projectId]);
 
   // toggle folder open/close
   const toggleFolder = (path: string) => {
@@ -88,20 +119,74 @@ export function FileExplorer({ onFileSelect }: FileExplorerProps) {
     : fileTree;
 
   // handle upload folder
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!projectId) {
+      alert("Chưa có projectId!");
+      return;
+    }
+
     const files = e.target.files;
     if (!files) return;
-    const tree = buildFileTree(files);
-    setFileTree(tree);
+
+    for (const file of Array.from(files)) {
+      const path = (file as any).webkitRelativePath || file.name;
+      const content = await file.text();
+
+      await fetch("/api/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          name: file.name,
+          path,
+          content,
+          type: "file",
+        }),
+      });
+    }
+
+    // Reload fileTree after upload
+    const res = await fetch(`/api/files?projectId=${projectId}`);
+    if (res.ok) {
+      const files = await res.json();
+      setFileTree(files);
+    }
   };
 
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.setAttribute("webkitdirectory", "");
+  // handle upload files
+  const handleUploadFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!projectId) {
+      alert("Chưa có projectId!");
+      return;
     }
-  }, []);
+
+    const files = e.target.files;
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      const path = file.name;
+      const content = await file.text();
+
+      await fetch("/api/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          name: file.name,
+          path,
+          content,
+          type: "file",
+        }),
+      });
+    }
+
+    // Reload fileTree after upload
+    const res = await fetch(`/api/files?projectId=${projectId}`);
+    if (res.ok) {
+      const files = await res.json();
+      setFileTree(files);
+    }
+  };
 
   return (
     <div className="bg-gray-900 border-r border-gray-700 h-full flex flex-col">
@@ -110,16 +195,48 @@ export function FileExplorer({ onFileSelect }: FileExplorerProps) {
         <h2 className="text-gray-300 font-medium text-sm">EXPLORER</h2>
         <div className="flex gap-1">
           {/* upload folder */}
-          <label className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded cursor-pointer">
-            <Upload className="w-4 h-4" />
-            <input
-              type="file"
-              multiple
-              ref={inputRef}
-              hidden
-              onChange={handleUpload}
-            />
-          </label>
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded flex items-center gap-1"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-1 w-32 bg-gray-800 border border-gray-700 rounded shadow-lg z-10">
+                {/* Upload Folder */}
+                <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer w-full">
+                  <Folder className="w-4 h-4 text-gray-300" />
+                  <span>Folder</span>
+                  <input
+                    type="file"
+                    multiple
+                    ref={folderInputRef}
+                    hidden
+                    onChange={handleUploadFolder}
+                    // @ts-ignore: thuộc tính không được định nghĩa trong TS
+                    webkitdirectory=""
+                    // @ts-ignore
+                    directory=""
+                  />
+                </label>
+
+                {/* Upload File */}
+                <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer w-full">
+                  <File className="w-4 h-4 text-gray-300" />
+                  <span>File</span>
+                  <input
+                    type="file"
+                    multiple
+                    ref={fileInputRef}
+                    hidden
+                    onChange={handleUploadFiles}
+                  />
+                </label>
+              </div>
+            )}
+          </div>
           {/* search toggle */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -155,9 +272,9 @@ export function FileExplorer({ onFileSelect }: FileExplorerProps) {
 
       {/* tree */}
       <div className="flex-1 overflow-y-auto py-2">
-        {displayedTree.map((node, index) => (
+        {displayedTree.map((node) => (
           <FileItem
-            key={index}
+            key={node.path || node.name}
             node={node}
             level={0}
             onFileSelect={onFileSelect}
