@@ -64,7 +64,6 @@ export const useGitStore = create<GitState>((set, get) => ({
             await get().refreshStatus();
             useUIStore.getState().addLog(LogType.SUCCESS, "Initialized empty Git repository.");
         } catch (e) {
-
             useUIStore.getState().addLog(LogType.ERROR, "Failed to initialize Git repository.");
         }
     },
@@ -153,7 +152,6 @@ export const useGitStore = create<GitState>((set, get) => ({
             }
             await get().refreshStatus();
         } catch (e) {
-
         }
     },
 
@@ -166,7 +164,6 @@ export const useGitStore = create<GitState>((set, get) => ({
             await gitService.reset(dir, change.path);
             await get().refreshStatus();
         } catch (e) {
-
         }
     },
 
@@ -183,7 +180,6 @@ export const useGitStore = create<GitState>((set, get) => ({
             await get().refreshStatus();
             useUIStore.getState().addLog(LogType.SUCCESS, `Committed: "${message}"`);
         } catch (e) {
-
             useUIStore.getState().addLog(LogType.ERROR, "Commit failed.");
         }
     }

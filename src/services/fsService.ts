@@ -281,7 +281,6 @@ class FSService {
                 "utf8"
             );
         } catch (e) {
-
         }
 
         return items;

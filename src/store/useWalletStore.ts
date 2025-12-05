@@ -122,7 +122,6 @@ export const useWalletStore = create<WalletState>((set, get) => ({
                     await walletService.connect(walletName);
                 }
             } catch (error) {
-
             } finally {
                 set({ isLoading: false });
             }

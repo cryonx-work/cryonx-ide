@@ -183,7 +183,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             useUIStore.getState().addLog(LogType.SUCCESS, `Imported project: ${name}`);
             useUIStore.getState().setStatus("success", `Imported project ${name}`);
         } catch (error) {
-
             useUIStore.getState().addLog(LogType.ERROR, "Failed to import project.");
         }
     },
@@ -237,7 +236,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             const files = await fsService.loadProject(projectId);
             return { name: project.name, items: files || [] };
         } catch (error) {
-
             return null;
         }
     },

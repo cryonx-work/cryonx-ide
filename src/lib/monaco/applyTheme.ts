@@ -3,6 +3,5 @@ export function applyTheme(monaco: typeof import('monaco-editor/esm/vs/editor/ed
     try{
         monaco.editor.setTheme(themeName);
     }catch(e){
-
     }
 }
