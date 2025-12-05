@@ -20,7 +20,6 @@ class SettingsService {
                 return { ...DEFAULT_SETTINGS, ...savedSettings };
             }
         } catch (error) {
-
         }
         return DEFAULT_SETTINGS;
     }
@@ -30,7 +29,6 @@ class SettingsService {
         try {
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
         } catch (error) {
-
         }
     }
 }

@@ -62,7 +62,6 @@ class CollabService {
                     };
                 }
             } catch (e) {
-
                 localStorage.removeItem('cryonx_collab_session');
             }
         }

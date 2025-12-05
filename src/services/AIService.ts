@@ -39,7 +39,6 @@ export const auditSmartContract = async (code: string): Promise<string> => {
 
     return response.text || AI_CONFIG.NO_RESPONSE_MESSAGE;
   } catch (error) {
-
     return AI_CONFIG.DEFAULT_ERROR_MESSAGE;
   }
 };
@@ -60,7 +59,6 @@ export const explainCode = async (code: string): Promise<string> => {
 
     return response.text || AI_CONFIG.NO_RESPONSE_MESSAGE;
   } catch (error) {
-
     return "Error explaining code.";
   }
 };
@@ -83,7 +81,6 @@ export const chatWithAI = async (message: string, contextCode: string): Promise<
 
     return response.text || "I'm not sure how to answer that.";
   } catch (error: any) {
-
     if (error.message?.includes("API key not valid") || error.status === "INVALID_ARGUMENT") {
       throw new Error("INVALID_API_KEY");
     }

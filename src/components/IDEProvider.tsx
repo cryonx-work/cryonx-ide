@@ -97,16 +97,13 @@ export const IDEProvider: React.FC<{ children: React.ReactNode }> = ({
                         : config.autoSaveDelay;
 
                 const handler = setTimeout(async () => {
-                    // A. Sync File Content to ZenFS
                     await fsService.syncToFS(activeProjectId, fsItems);
 
-                    // B. Refresh Git Status
+
                     if (git.isInitialized) {
                         await git.refreshStatus();
                     }
 
-                    // C. Update Last Modified in Store
-                    // (This will trigger the Effect #3 below)
                     projects.setAllProjects((prev) =>
                         prev.map((p) =>
                             p.id === activeProjectId
@@ -129,8 +126,6 @@ export const IDEProvider: React.FC<{ children: React.ReactNode }> = ({
         isReady,
     ]);
 
-    // --- 3. Persist Project List (Sync projects.json) ---
-    // Tách riêng logic này ra để đảm bảo luôn ghi data mới nhất khi Store thay đổi
     useEffect(() => {
         if (!isReady || allProjects.length === 0) return;
 

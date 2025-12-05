@@ -62,7 +62,6 @@ class ProjectService {
     }
 
     async saveProjects(projects: Project[]): Promise<void> {
-        // Hàm này gọi fsService.writeFile -> Sẽ chạy qua logic xóa cũ -> ghi mới ở trên
         await fsService.writeFile("/projects/meta/projects.json", JSON.stringify(projects, null, 2));
     }
 
@@ -84,28 +83,25 @@ class ProjectService {
             lastModified: Date.now(),
         };
 
-        // 1. Chuẩn bị items từ template
+
         const templateItems = TEMPLATES[template] || TEMPLATES.blank;
         const items = this.cloneTemplateWithNewIds(templateItems);
 
         try {
-            // 2. Ghi file vào hệ thống ZenFS
             await this.syncProject(newProject.id, items);
 
-            // 3. QUAN TRỌNG: Cập nhật danh sách projects trong system
             const currentProjects = await this.loadProjects();
             currentProjects.push(newProject);
             await this.saveProjects(currentProjects);
 
             return { project: newProject, items };
         } catch (error) {
-            // Rollback: Xóa rác nếu tạo lỗi
+
             try { await this.deleteProject(id); } catch { }
             throw error;
         }
     }
 
-    // Sửa thêm Import Project tương tự
     async importProject(name: string, items: FileSystemItem[]): Promise<{ project: Project, items: FileSystemItem[] }> {
         const id = nanoid();
         const newProject: Project = {
@@ -116,7 +112,7 @@ class ProjectService {
             lastModified: Date.now(),
         };
 
-        // Logic xử lý root folders của bạn...
+
         const rootFolders = items.filter(i => i.parentId === null && i.type === "folder");
         let newItems = items;
         if (rootFolders.length === 1) {
@@ -127,10 +123,8 @@ class ProjectService {
         }
 
         try {
-            // 1. Sync file
             await this.syncProject(newProject.id, newItems);
 
-            // 2. Lưu danh sách project
             const currentProjects = await this.loadProjects();
             currentProjects.push(newProject);
             await this.saveProjects(currentProjects);

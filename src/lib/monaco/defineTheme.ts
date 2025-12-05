@@ -27,7 +27,6 @@ const defineTheme = (monaco: typeof import('monaco-editor/esm/vs/editor/editor.m
                 rules: theme.rules,
             })
         } catch (e) {
-
         }
     }
 }
